@@ -270,7 +270,9 @@ fn generate(iface_json: String) -> String = {
   lines = lines + ["import ctypes, struct, os"]
   lines = lines + [""]
   lines = lines + ["_dir = os.path.dirname(os.path.abspath(__file__))"]
-  lines = lines + ["_lib = ctypes.CDLL(os.path.join(_dir, 'libalmide_${module_name}.dylib'))"]
+  lines = lines + ["import sys as _sys"]
+  lines = lines + ["_ext = '.dylib' if _sys.platform == 'darwin' else '.dll' if _sys.platform == 'win32' else '.so'"]
+  lines = lines + ["_lib = ctypes.CDLL(os.path.join(_dir, 'libalmide_${module_name}' + _ext))"]
   lines = lines + [""]
 
   for t in types {
