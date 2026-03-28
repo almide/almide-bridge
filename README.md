@@ -1,84 +1,87 @@
-# almide-bridge
+# almide-bindgen
 
-Universal FFI binding generator for Almide. Written in Almide.
+Universal FFI binding generator for [Almide](https://github.com/almide/almide). Written entirely in Almide.
 
-Purpose-built for Almide's type system. Implemented entirely in Almide.
+## 14 Languages
+
+| Language | FFI | Status |
+|----------|-----|--------|
+| Python | ctypes | verified |
+| Go | cgo | verified |
+| Ruby | FFI gem | verified |
+| Swift | C header | verified |
+| C# | P/Invoke | verified |
+| Dart | dart:ffi | verified |
+| Kotlin | JNA | ready |
+| Java | JNA | ready |
+| C | header | ready |
+| Zig | extern | ready |
+| Nim | dynlib | ready |
+| Elixir | NIF | ready |
+| PHP | FFI ext | ready |
+| Lua | LuaJIT FFI | ready |
 
 ## How it works
 
 ```
-Almide source (.almd)
+mylib.almd (Almide source)
     │
-    ├─ almide compile --json → interface.json (types + functions + ABI)
-    ├─ almide --target rust --repr-c → source.rs (#[repr(C)] types)
-    │
-    ▼
-almide-bridge reads interface.json + source.rs
-    │
-    ├─ Generates Rust scaffolding (byte buffer pack/unpack + extern "C" entry points)
-    ├─ Generates language bindings (Python/Go/C#/Kotlin/Dart/Ruby/Swift)
+    ├─ almide compile --json         → interface.json
+    ├─ almide --target rust --repr-c → source.rs
     │
     ▼
-cargo build → shared library (.so/.dylib/.dll)
-    +
-Pure language wrapper (no Rust toolchain needed on user side)
+almide run scaffolding.almd          → src/lib.rs (byte buffer FFI)
+    │
+    ▼
+cargo build                          → libalmide_mylib.dylib
+    │
+    ▼
+almide run bindings/python.almd      → almide_mylib.py (pure Python)
+almide run bindings/go.almd          → almide_mylib.go (pure Go)
+almide run bindings/swift.almd       → almide_mylib.swift (pure Swift)
+    ...
+```
+
+## Quick start
+
+```bash
+# 1. Generate interface + Rust source
+almide compile mylib.almd --json > interface.json
+almide mylib.almd --target rust --repr-c > source.rs
+
+# 2. Generate FFI scaffolding
+almide run scaffolding.almd -- interface.json source.rs
+cargo build
+
+# 3. Generate binding for your language
+almide run bindings/python.almd -- interface.json
+
+# 4. Use it
+python3 -c "from almide_mylib import Point, distance; print(distance(Point(x=0,y=0), Point(x=3,y=4)))"
+# → 5.0
 ```
 
 ## Byte buffer protocol
 
 All types are serialized to/from byte buffers. No C struct mapping needed.
 
-```
-Rust side:  extern "C" fn bridge_distance(args: *const u8, args_len: i32, out: *mut u8, out_len: *mut i32)
-Lang side:  buf = pack([Point(0,0), Point(3,4)])  →  result = unpack_f64(call(buf))
-```
+| Type | Encoding | Size |
+|------|----------|------|
+| Int | big-endian i64 | 8 bytes |
+| Float | big-endian f64 | 8 bytes |
+| Bool | 0 or 1 | 1 byte |
+| String | u32 BE length + UTF-8 | 4 + N bytes |
+| Record | fields in order | sum of fields |
+| Variant | u32 BE tag + payload | 4 + payload |
 
-### Serialization format
+## No external dependencies
 
-| Type | Encoding |
-|------|----------|
-| Int | 8 bytes, big-endian i64 |
-| Float | 8 bytes, big-endian f64 |
-| Bool | 1 byte (0=false, 1=true) |
-| String | 4 bytes length (BE i32) + UTF-8 bytes |
-| Option[T] | 1 byte tag (0=none, 1=some) + T if some |
-| Result[T,E] | 1 byte tag (0=ok, 1=err) + T or E |
-| List[T] | 4 bytes count (BE i32) + count × T |
-| Record | fields in declaration order |
-| Variant | 4 bytes tag (BE i32) + payload |
+- No UniFFI
+- No PyO3 / maturin
+- No napi-rs
+- No Magnus
 
-### Why byte buffers instead of C FFI?
-
-| | C FFI (argtypes, repr(C)) | Byte buffer |
-|---|---|---|
-| Struct passing | Flatten to scalars or use pointers | Pack/unpack — uniform |
-| String handling | char*, manual free | Length-prefixed, automatic |
-| Variant dispatch | Split into per-case functions | Tag byte, single function |
-| argtypes setup | Per-function, per-language | Not needed |
-| New language | Write C FFI mapping from scratch | Implement pack/unpack once |
-
-## Architecture
-
-```
-almide-bridge/
-├── protocol.almd          ← Serialization spec (pack/unpack)
-├── scaffolding.almd       ← Rust scaffolding generator
-├── bindings/
-│   ├── python.almd        ← Python binding generator
-│   ├── go.almd            ← Go binding generator
-│   ├── csharp.almd        ← C# binding generator
-│   ├── kotlin.almd        ← Kotlin binding generator
-│   ├── dart.almd          ← Dart binding generator
-│   ├── ruby.almd          ← Ruby binding generator
-│   └── swift.almd         ← Swift binding generator
-└── bridge.almd            ← CLI entry point
-```
-
-All generators are written in Almide. No external tools (no UniFFI, no PyO3, no napi-rs).
-
-## Status
-
-Early development. Design phase.
+Every generator is a `.almd` file. The only build tool needed is `cargo` (to compile the Rust scaffolding into a shared library).
 
 ## License
 

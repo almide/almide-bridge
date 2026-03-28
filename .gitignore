@@ -1,0 +1,10 @@
+target/
+node_modules/
+.venv/
+__pycache__/
+*.so
+*.dylib
+*.dll
+*.node
+*.whl
+Cargo.lock
