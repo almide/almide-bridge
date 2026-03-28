@@ -2,68 +2,50 @@
 
 Universal FFI binding generator for [Almide](https://github.com/almide/almide). Written entirely in Almide.
 
-## 14 Languages
+This is a **library** — import it with `import bindgen`. The CLI tool is [almide-lander](https://github.com/almide/almide-lander).
 
-| Language | FFI | Status |
-|----------|-----|--------|
-| Python | ctypes | verified |
-| Go | cgo | verified |
-| Ruby | FFI gem | verified |
-| Swift | C header | verified |
-| C# | P/Invoke | verified |
-| Dart | dart:ffi | verified |
-| Kotlin | JNA | ready |
-| Java | JNA | ready |
-| C | header | ready |
-| Zig | extern | ready |
-| Nim | dynlib | ready |
-| Elixir | NIF | ready |
-| PHP | FFI ext | ready |
-| Lua | LuaJIT FFI | ready |
+## 20 Languages
 
-## How it works
+| Language | FFI | Language | FFI |
+|----------|-----|----------|-----|
+| Python | ctypes | C++ | extern "C" |
+| Go | cgo | Rust | FFI |
+| Ruby | FFI gem | JavaScript | koffi |
+| Swift | C header | Scala | JNA |
+| C# | P/Invoke | Julia | ccall |
+| Dart | dart:ffi | PowerShell | DllImport |
+| Kotlin | JNA | Elixir | NIF |
+| Java | JNA | PHP | FFI ext |
+| C | header | Lua | LuaJIT FFI |
+| Zig | extern | Nim | dynlib |
 
-```
-mylib.almd (Almide source)
-    │
-    ├─ almide compile --json         → interface.json
-    ├─ almide --target rust --repr-c → source.rs
-    │
-    ▼
-almide run scaffolding.almd          → src/lib.rs (byte buffer FFI)
-    │
-    ▼
-cargo build                          → libalmide_mylib.dylib
-    │
-    ▼
-almide run bindings/python.almd      → almide_mylib.py (pure Python)
-almide run bindings/go.almd          → almide_mylib.go (pure Go)
-almide run bindings/swift.almd       → almide_mylib.swift (pure Swift)
-    ...
-```
+## Library API
 
-## Quick start
+```almide
+import bindgen
 
-```bash
-# 1. Generate interface + Rust source
-almide compile mylib.almd --json > interface.json
-almide mylib.almd --target rust --repr-c > source.rs
+// Version + supported languages
+bindgen.version()                    // "0.1.0"
+bindgen.supported_languages()        // ["python", "go", ..., "powershell"]
 
-# 2. Generate FFI scaffolding
-almide run scaffolding.almd -- interface.json source.rs
-cargo build
+// Generate Rust FFI scaffolding
+let lib_rs = bindgen.scaffolding.generate(iface_json, rust_source)
+let cargo  = bindgen.scaffolding.generate_cargo(iface_json)
 
-# 3. Generate binding for your language
-almide run bindings/python.almd -- interface.json
-
-# 4. Use it
-python3 -c "from almide_mylib import Point, distance; print(distance(Point(x=0,y=0), Point(x=3,y=4)))"
-# → 5.0
+// Generate language bindings (all return String)
+let py_code = bindgen.bindings.python.generate(iface_json)
+let go_code = bindgen.bindings.go.generate(iface_json)
+// ... 20 languages
 ```
 
 ## Byte buffer protocol
 
-All types are serialized to/from byte buffers. No C struct mapping needed.
+All types are serialized to/from byte buffers across the FFI boundary. No C struct mapping needed.
+
+```
+Rust:   extern "C" fn bridge_distance(args: *const u8, args_len: i32, out: *mut u8, out_cap: i32) -> i32
+Python: buf = struct.pack('>d', a.x) + ... → result = struct.unpack_from('>d', call(buf))
+```
 
 | Type | Encoding | Size |
 |------|----------|------|
@@ -76,12 +58,7 @@ All types are serialized to/from byte buffers. No C struct mapping needed.
 
 ## No external dependencies
 
-- No UniFFI
-- No PyO3 / maturin
-- No napi-rs
-- No Magnus
-
-Every generator is a `.almd` file. The only build tool needed is `cargo` (to compile the Rust scaffolding into a shared library).
+Every generator is a `.almd` file. No UniFFI, no PyO3, no napi-rs.
 
 ## License
 
