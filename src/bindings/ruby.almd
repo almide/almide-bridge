@@ -300,7 +300,8 @@ fn generate(iface_json: String) -> String = {
   lines = lines + ["module Almide${cap_module}"]
   lines = lines + ["  module Lib"]
   lines = lines + ["    extend FFI::Library"]
-  lines = lines + ["    ffi_lib File.join(__dir__, 'libalmide_${module_name}')"]
+  lines = lines + ["    _ext = case RUBY_PLATFORM; when /darwin/ then '.dylib'; when /win|mingw/ then '.dll'; else '.so'; end"]
+  lines = lines + ["    ffi_lib File.join(__dir__, \"libalmide_${module_name}#{_ext}\")"]
   lines = lines + [""]
   for f in functions {
     let fname = get_str(f, "name")

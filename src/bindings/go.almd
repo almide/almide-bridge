@@ -291,12 +291,13 @@ fn generate(iface_json: String) -> String = {
   lines = lines + ["package ${module_name}"]
   lines = lines + [""]
   lines = lines + ["/*"]
-  lines = lines + ["#cgo LDFLAGS: -L. -lalmide_${module_name}"]
+  let dollar = "$"
+  lines = lines + ["#cgo LDFLAGS: -L${dollar}{SRCDIR} -lalmide_${module_name}"]
   lines = lines + ["#include <stdint.h>"]
-  lines = lines + ["int bridge_distance(const char* args, int args_len, char* out, int out_cap);"]
-  lines = lines + ["int bridge_area(const char* args, int args_len, char* out, int out_cap);"]
-  lines = lines + ["int bridge_midpoint(const char* args, int args_len, char* out, int out_cap);"]
-  lines = lines + ["int bridge_describe(const char* args, int args_len, char* out, int out_cap);"]
+  for f in functions {
+    let fname = get_str(f, "name")
+    lines = lines + ["int bridge_${fname}(const char* args, int args_len, char* out, int out_cap);"]
+  }
   lines = lines + ["*/"]
   lines = lines + ["import \"C\""]
   lines = lines + [""]
