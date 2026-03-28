@@ -5,8 +5,6 @@
 // Produces a .java file using JNA for FFI and ByteBuffer for serialization.
 
 import json
-import fs
-import env
 
 // ── JSON helpers ──
 
@@ -289,12 +287,8 @@ fn gen_function(f: Value, module_name: String, types: List[Value]) -> List[Strin
 
 // ── Main ──
 
-effect fn main() -> Unit = {
-  let args = env.args()
-  let iface_path = list.get(args, 0) ?? "interface.json"
-
-  let iface_text = fs.read_text(iface_path)!
-  let iface = json.parse(iface_text)!
+fn generate(iface_json: String) -> String = {
+  let iface = json.parse(iface_json) ?? json.null()
 
   let module_name = get_str(iface, "module")
   let types = get_arr(iface, "types")
@@ -361,6 +355,5 @@ effect fn main() -> Unit = {
 
   lines = lines + ["}"]
 
-  fs.write("almide_${module_name}.java", lines.join("\n"))!
-  println("Generated: almide_${module_name}.java (almide-bridge, Java/JNA)")
+  lines.join("\n")
 }

@@ -1,14 +1,16 @@
 // bindgen — Universal FFI binding generator for Almide
 //
-// Library API: import bindgen
-//   bindgen.scaffolding(iface_json, rust_source) -> String
-//   bindgen.python(iface_json) -> String
-//   bindgen.go(iface_json) -> String
-//   ... etc for all 14 languages
+// Library API:
+//   import bindgen
+//   bindgen.scaffolding.generate(iface_json, rust_source) -> String
+//   bindgen.scaffolding.generate_cargo(iface_json) -> String
+//   bindgen.bindings.python.generate(iface_json) -> String
+//   bindgen.bindings.go.generate(iface_json) -> String
+//   ... (14 languages)
 
 import json
 
-// ── Shared JSON helpers (used by all generators) ──
+// ── Shared helpers ──
 
 fn get_str(v: Value, key: String) -> String =
   json.as_string(json.get(v, key) ?? json.from_string("")) ?? ""
@@ -39,14 +41,6 @@ fn is_variant(name: String, types: List[Value]) -> Bool = {
 }
 
 // ── Public API ──
-// Each function takes interface JSON string and returns generated source code.
-
-// Placeholder: the actual generation logic is in sub-modules.
-// When Almide supports import self.sub, these will delegate to:
-//   self.scaffolding.generate(iface)
-//   self.bindings.python.generate(iface)
-// For now, the generation logic remains in the individual .almd files
-// and lander calls them via process.exec("almide", ["run", ...]).
 
 fn version() -> String = "0.1.0"
 
