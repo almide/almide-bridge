@@ -8,3 +8,4 @@ __pycache__/
 *.node
 *.whl
 Cargo.lock
+.almide/
