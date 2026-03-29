@@ -165,8 +165,7 @@ test "gen_pack record" {
 
 test "gen_scaffold_fn produces extern C wrapper" {
   let f = json.parse("{\"name\":\"add\",\"params\":[{\"name\":\"a\",\"type\":{\"kind\":\"int\"}},{\"name\":\"b\",\"type\":{\"kind\":\"int\"}}],\"return\":{\"kind\":\"int\"}}") ?? json.null()
-  let lines = scaffolding.gen_scaffold_fn(f, [])
-  let text = list.join(lines, "\n")
+  let text = scaffolding.gen_scaffold_fn(f, [])
   assert(string.contains(text, "#[no_mangle]"));
   assert(string.contains(text, "extern \"C\""));
   assert(string.contains(text, "bridge_add"));
@@ -177,8 +176,7 @@ test "gen_scaffold_fn produces extern C wrapper" {
 
 test "gen_scaffold_fn string param" {
   let f = json.parse("{\"name\":\"greet\",\"params\":[{\"name\":\"name\",\"type\":{\"kind\":\"string\"}}],\"return\":{\"kind\":\"string\"}}") ?? json.null()
-  let lines = scaffolding.gen_scaffold_fn(f, [])
-  let text = list.join(lines, "\n")
+  let text = scaffolding.gen_scaffold_fn(f, [])
   assert(string.contains(text, "bridge_greet"));
   assert(string.contains(text, "from_utf8_lossy"))
 }
@@ -188,8 +186,7 @@ test "gen_scaffold_fn string param" {
 // ═══════════════════════════════════════════════════════
 
 test "gen_bridge_helpers content" {
-  let lines = scaffolding.gen_bridge_helpers()
-  let text = list.join(lines, "\n")
+  let text = scaffolding.gen_bridge_helpers()
   assert(string.contains(text, "bridge_alloc"));
   assert(string.contains(text, "bridge_free"));
   assert(string.contains(text, "extern \"C\""));
