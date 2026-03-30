@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RUST_TOOLCHAIN: "1.89.0"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.almide
+          key: ${{ runner.os }}-almide-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('almide.lock') }}
+          restore-keys: ${{ runner.os }}-almide-${{ env.RUST_TOOLCHAIN }}-
+      - name: Install Almide
+        run: cargo install --git https://github.com/almide/almide.git --branch develop
+      - name: Run tests
+        run: almide test
