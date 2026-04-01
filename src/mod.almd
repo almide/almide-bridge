@@ -30,6 +30,7 @@ fn is_variant(name: String, types: List[Value]) -> Bool = get_kind(json.get(find
 fn version() -> String = "0.1.0"
 
 fn supported_languages() -> List[String] = [
+  "almide",
   "python",
   "go",
   "ruby",
