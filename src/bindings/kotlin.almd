@@ -218,7 +218,7 @@ fn generate(iface_json: String) -> String = {
     }
   });
   let fn_defs = functions |> list.flat_map((f) => gen_function(f, module_name, types));
-  header + jna_iface + (type_defs + [
+  header + jna_iface + ((type_defs + [
     "object ${cap_module} {"
-  ] + fn_defs + ["}"]) |> list.join("\n")
+  ] + fn_defs + ["}"]) |> list.join("\n"))
 }
